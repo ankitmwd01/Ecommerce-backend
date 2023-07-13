@@ -24,7 +24,7 @@ route.post("/signup", async (req, res) => {
             id: user._id,
             token: crypto.randomBytes(32).toString("hex")
         });
-        const url = `${process.env.FRONT_END_BASE_URL}/v1/user/${user._id}/verify/${token.token}`;
+        const url = `${process.env.BACKEND_URL}/v1/user/${user._id}/verify/${token.token}`;
         await sendMail(user.email, "Verify Email", url);
         res.send(user);
     }
@@ -50,6 +50,7 @@ route.get("/:id/verify/:token", async (req, res) => {
         const token = await Token.findOne({ id: user._id, token: req.params.token });
         if (!token) {
             res.send("invalidlink");
+           
         }
         else {
             await User.updateOne({ _id: user._id }, {verified: true });
@@ -63,25 +64,29 @@ route.get("/:id/verify/:token", async (req, res) => {
 })
 route.post("/login", async (req, res) => {
     const { email, password } = req.body;
-
-    console.log(email);
-    let exists = await User.findOne({ email: email });
-    console.log(exists);
+    var exists = await User.findOne({ email: email });
     if (!exists) {
         res.send("notexists");
     }
-    else if (exists.verified===false) {
+    else if (exists.verified === false) {
+        var token = await Token.findOne({ id: exists._id });
+        if (!token) {
+           token = await Token.create({
+            id: exists._id,
+            token: crypto.randomBytes(32).toString("hex")
+        });
+        }
+        const url = `${process.env.BACKEND_URL}/v1/user/${exists._id}/verify/${token.token}`;
+        await sendMail(email, "Verify Email", url);
         res.send("notverified")
     }
     else {
 
         let Match = await bcrypt.compare(password, exists.password);
-        console.log(Match);
         if (Match) {
-            
             res.send({
                 login: "login",
-                id: exists._id,
+                id:exists._id,
             });
         }
         else res.send("notlogin");

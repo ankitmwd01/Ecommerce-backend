@@ -3,32 +3,18 @@ import express from "express";
 import Stripe from 'stripe';
 import { Product } from "../database/ProductDatabase.js"; 
 import Card from "../database/CartDatabase.js";
+import Order from "../database/orderDatabase.js";
 const route = express.Router();
 const stripe = new Stripe(process.env.STRIPE_PRIVATE_KEY);
 route.post("/card/payment", async (req, res) => {
-    const Arr = [];
-    const product_id = req.body.Arr[0].product_id;
-    // const card_id = req.body.Arr[0].card_id;
-    const quantity = req.body.Arr[0].quantity;
-
-    for (let i = 0; i < req.body.Arr.length; i++) {
-        Arr.push(await Card.findOne({ user_id: req.body.Arr[i].user_id, product_id: req.body.Arr[i].product_id }))
-    }
-    console.log(Arr, "Arr");
-    const lineItems = [];
-    for (let i = 0; i < Arr.length; i++) {
-        const { name, price, img } = await Product.findOne({ _id: Arr[i].product_id });
-        
-        lineItems.push({ name: name, price: price*100, img: img, quantity: Arr[i].quantity });
-    }
-    
-    console.log(lineItems);
+    const Arr = req.body.Arr;
+    console.log(Arr,"Arr");
     const card_id = Arr.length === 1 ? req.body.Arr[0].card_id : "all";
     try {
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             mode: 'payment',
-            line_items: lineItems.map((item) => {
+            line_items: Arr.map((item) => {
                 return {
                     price_data: {
                         currency: "inr",
@@ -36,7 +22,7 @@ route.post("/card/payment", async (req, res) => {
                             name: item.name,
                             images: item.img
                         },
-                        unit_amount: item.price,
+                        unit_amount: (item.price*100),
                     },
                     quantity: item.quantity
                 }
@@ -51,4 +37,47 @@ route.post("/card/payment", async (req, res) => {
     }
     
 });
+route.post("/payment/success/:id", async (req, res) => {
+    const card_id = req.params.id;
+    const cardItem = await Card.findOne({ _id: card_id });
+    if (cardItem) {
+        await Card.deleteOne({ _id: card_id });
+        const product = await Product.findOne({ _id: cardItem.product_id });
+        const order = await Order.create({
+            name: product.name,
+            img: product.img,
+            quantity: cardItem.quantity,
+            price: product.price,
+            product_id: product._id,
+            user_id: cardItem.user_id,
+        })
+        console.log(order);
+        await Product.findOneAndUpdate({ _id: product._id }, { quantity: product.quantity - cardItem.quantity });
+        res.send(order);
+    }
+    else {
+        res.send("nothing");
+    }
+});
+route.post("/payment/success/all/:id", async (req, res) => {
+    const User_id = req.params.id;
+    const cardItem = await Card.find({ user_id: User_id });
+    for (let i = 0; i < cardItem?.length; i++){
+         if (cardItem[i]) {
+        await Card.deleteOne({ _id: cardItem[i]._id });
+        const product = await Product.findOne({ _id: cardItem[i].product_id });
+        const order = await Order.create({
+            name: product.name,
+            img: product.img,
+            quantity: cardItem[i].quantity,
+            price: product.price,
+            product_id: product._id,
+            user_id: cardItem[i].user_id,
+        })
+        console.log(order);
+        await Product.findOneAndUpdate({ _id: product._id }, { quantity: product.quantity - cardItem[i].quantity });  
+    }
+    }
+    res.send("done");
+})
 export default route;

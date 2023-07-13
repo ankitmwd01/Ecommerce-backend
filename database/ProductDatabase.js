@@ -16,8 +16,9 @@ const product = new mongoose.Schema({
         type: String,
     }],
     user_id: {
-        type: String,
-        required:true,
+         type: mongoose.Schema.Types.ObjectId,
+         required: true,
+         ref: "User",
     },
     rating: {
         type: Number,
@@ -36,9 +37,21 @@ const product = new mongoose.Schema({
        default:0, 
     },
     review: [{
-        type: String,
-        default:null,
-    }],
+          userReview: {
+            type: String,
+       
+        },
+        userRating: {
+            type: Number,
+        },
+        userName: {
+            type: String,
+        },
+        userEmail: {
+            type: String,
+         }
+    }
+    ],
     norating: {
         type: Number,
         default:0,

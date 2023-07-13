@@ -1,8 +1,9 @@
 import mongoose from "mongoose";
 const card = new mongoose.Schema({
     product_id: {
-        type: String,
-        required: true,
+         type: mongoose.Schema.Types.ObjectId,
+         required: true,
+         ref: "Product",
     },
     quantity: {
         type: Number,
@@ -10,8 +11,9 @@ const card = new mongoose.Schema({
         default:1,
     },
     user_id: {
-        type: String,
-        required: true,
+         type: mongoose.Schema.Types.ObjectId,
+         required: true,
+         ref: "User",
     }
 
 });

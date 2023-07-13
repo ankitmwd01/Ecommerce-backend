@@ -1,10 +1,9 @@
 import mongoose, { Schema} from "mongoose";
 const token = new mongoose.Schema({
     id: {
-        type: Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         required: true,
         ref: "User",
-        unique: true,
     },
     token: { type: String, required: true },
     createdAt: {

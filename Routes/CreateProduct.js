@@ -5,7 +5,6 @@ import { Product } from "../database/ProductDatabase.js";
 // Create Product
 route.post("/create", async (req, res) => {
     const { name, price, quantity, desc, discount, img, user_id } = req.body;
-    console.log(user_id);
     const user = await Product.create({
         name, price, quantity, img, desc, discount,user_id
     });
@@ -14,6 +13,4 @@ route.post("/create", async (req, res) => {
         user,
     })
 });
-
-
 export default route;

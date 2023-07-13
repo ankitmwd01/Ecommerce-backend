@@ -2,12 +2,14 @@ import mongoose from "mongoose";
 
 const order = new mongoose.Schema({
     user_id: {
-        type: String,
-        required: true,
+         type: mongoose.Schema.Types.ObjectId,
+         required: true,
+         ref: "User",
     },
     product_id: {
-        type: String,
-        required: true,
+        type: mongoose.Schema.Types.ObjectId,
+         required: true,
+         ref: "Product",
     },
     order_date: {
         type: Date,

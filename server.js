@@ -13,13 +13,6 @@ import Stripe from 'stripe';
 import OrderRoute from "./Routes/orderRoute.js";
 const app = express();
 MongoConnection();
-// await sendMail("ankitmwd15@gmail.com","Verification using Node js","Verification code");
-// cloudinary.config({ 
-//   cloud_name: process.env.CLOUD_NAME, 
-//   api_key: process.env.CLOUD_API_KEY, 
-//   api_secret: process.env.CLOUD_API_SECRET_KEY
-// });
-
 app.use(cors({
     origin: "*",
     methods:["POST","GET","PUT","DELETE"]
