@@ -1,4 +1,3 @@
-//Import
 import 'dotenv/config';
 import express from "express";
 import cors from "cors";
@@ -9,7 +8,6 @@ import SingupLogin from "./Routes/signup.js"
 import cookieParser from "cookie-parser";
 import { MongoConnection } from "./database/dataConnection.js";
 import PaymentRoute from "./Routes/paymentroute.js";
-import Stripe from 'stripe';
 import OrderRoute from "./Routes/orderRoute.js";
 const app = express();
 MongoConnection();

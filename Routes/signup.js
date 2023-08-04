@@ -5,6 +5,7 @@ import Seller from "../database/Seller.js";
 import Token from "../database/tookenDatabase.js"
 import crypto from 'crypto';
 import sendMail from "../utilis/sendEmail.js";
+import jwt from "jsonwebtoken";
 import "dotenv/config";
 const route = express.Router();
 
@@ -84,9 +85,11 @@ route.post("/login", async (req, res) => {
 
         let Match = await bcrypt.compare(password, exists.password);
         if (Match) {
+
+            const token = jwt.sign(String(exists._id), String(process.env.JWT_SECRET_KEY));
             res.send({
                 login: "login",
-                id:exists._id,
+                id:token,
             });
         }
         else res.send("notlogin");

@@ -3,10 +3,11 @@ import { Product } from "../database/ProductDatabase.js";
 import Card from "../database/CartDatabase.js";
 import Order from "../database/orderDatabase.js";
 import { User } from "../database/userDatabase.js";
+import jwt from "jsonwebtoken";
 const route = express.Router();
 route.get("/all", async (req, res) => {
     var AllProduct = await Product.find({});
-    res.send(AllProduct)
+    res.send(AllProduct);
 });
 route.get("/:id", async (req, res) => {
     const id = req.params.id;
@@ -24,7 +25,7 @@ route.put("/:id", async (req, res) => {
        return res.send("notfound");
     }
     else {
-        const product = await Product.findOneAndUpdate({ _id: id },{quantity:Match.quantity-minus});
+        const product = await Product.findOneAndUpdate({ _id: id },{quantity:Match.quantity-minus},{new:true});
        return res.send(product);
     }
 })
@@ -45,7 +46,11 @@ route.get("/admin/orders/:id", async (req, res) => {
 
 // Card Routes
 route.post("/card", async (req, res) => {
-    const { user_id, product_id } = req.body;
+    const { token, product_id } = req.body;
+    if (!token) { 
+        return res.send("user Not found");
+    }
+    const user_id =  jwt.verify(String(token),String( process.env.JWT_SECRET_KEY));
     const user = await Card.findOne({ user_id:user_id,product_id: product_id });
     if (user) {
         return res.send("exists");
@@ -53,13 +58,16 @@ route.post("/card", async (req, res) => {
     const card = await Card.create({
         user_id, product_id
     });
-    res.send(card);
-
-    
+    let newCard = await card.populate("product_id",'-review');
+    res.send(newCard);  
 });
 route.get("/card/:id", async (req, res) => {
-    const id = req.params.id;
-    const data = await Card.find({ user_id: id });
+    const token = req.params.id;
+    if (!token) { 
+        return res.send("user Not found");
+    }
+    const id =  jwt.verify(String(token),String( process.env.JWT_SECRET_KEY));
+    const data = await Card.find({ user_id: id }).populate("product_id", "-review");
     res.send(data);
 });
 route.delete("/card/:id", async (req, res) => {
@@ -69,8 +77,8 @@ route.delete("/card/:id", async (req, res) => {
     if (!Match) {
        return res.send("notfound");
     }
-    await Card.findOneAndDelete({ _id: id });
-       return res.send({message:"Successfully Deleted"});
+        await Card.findOneAndDelete({ _id: id });
+       return res.send(Match);
     }
     catch (e) {
         console.log(e);
@@ -79,17 +87,24 @@ route.delete("/card/:id", async (req, res) => {
 route.put("/card/update/:id", async (req, res) => {
     const id = req.params.id;
     const required =Number( req.body.required);
-    const exists = await Card.findOne({ _id: id });
-    const card = await Card.findOneAndUpdate({ _id: id }, { quantity: required });
-    res.send(card);
+    const card = await Card.findOneAndUpdate({ _id: id }, { quantity: required }, { new: true });
+    const newCard = await card.populate("product_id", "-review");
+    res.send(newCard);
 })
 route.delete("/card/all/:id", async (req, res) => {
     const id = req.params.id;
-    await Card.findManyAndDelete({ _id: id });
-    res.send({ message: "Successfully Deleted" });
+    const card = await Card.findOne({ _id: id });
+    if (card) {
+        await Card.findManyAndDelete({ _id: id });
+       return res.send(card);
+    }
+    else {
+       return res.send("not Found");
+    }
 });
 route.get("/card/all/:id", async (req, res) => {
     const id = req.params.id;
+    
     const card = await Card.find({ user_id: id });
     const product = await Product.find({});
     var Arr = [];
