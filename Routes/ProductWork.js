@@ -11,10 +11,11 @@ route.get("/all", async (req, res) => {
 });
 route.get("/:id", async (req, res) => {
     const id = req.params.id;
-    const Item = await Product.find({ _id: id });
+    const Item = await Product.findOne({ _id: id });
     if (!Item) {
         return res.send("User Not Found");
     }
+    console.log(Item);
     res.send(Item);
 });
 route.put("/:id", async (req, res) => {
@@ -120,24 +121,25 @@ route.get("/card/all/:id", async (req, res) => {
 route.post("/review/submit/:id", async (req, res) => {
     const product_id = req.params.id;
     const { rating, reviews } = req.body.review;
-    const userId = req.body.userId;
+    const token = req.body.token;
+    if (!token) { 
+        return res.send("user Not found");
+    }
+    const userId =  jwt.verify(String(token),String( process.env.JWT_SECRET_KEY));
     const user= await User.findOne({_id: userId});
     const product = await Product.findOne({ _id: product_id });
     const Match=product.review.some(review => review.userEmail===user.email);
     if (Match) {
-        console.log(Match);
+    
        return res.send("Already have a match");
     }
     else {
-        var Review = product.review;
+    var Review = product.review;
     var numOfRating = product.norating;
     var Rating = product.rating;
     numOfRating = numOfRating + 1;
-    
-    console.log(Rating,"rating",numOfRating)
     var total = ((Number((numOfRating - 1) * Rating)) +Number(rating));
-    console.log(total, "total");
-        Rating = (total / numOfRating);
+    Rating = (total / numOfRating);
     Review.push({ userReview: reviews, userRating: rating,userName: user.name,userEmail: user.email});
     await Product.findOneAndUpdate({ _id: product_id }, { review: Review, norating: numOfRating, rating:Rating });
      return res.send(Review);

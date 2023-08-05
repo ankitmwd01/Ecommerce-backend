@@ -2,6 +2,7 @@ import express from "express";
 import Order from "../database/orderDatabase.js";
 import { Product } from "../database/ProductDatabase.js";
 import Card from "../database/CartDatabase.js";
+import jwt from "jsonwebtoken"
 const route = express.Router();
 route.post("/ordered/:id", async (req, res) => {
     const id = req.params.id;
@@ -13,8 +14,14 @@ route.post("/ordered/:id", async (req, res) => {
     return res.send(order);
 });
 route.get("/order/all/:id", async (req, res) => {
-    const id = req.params.id;
+    const token = req.params.id;
+    if (!token) { 
+        return res.send("user Not found");
+    }
+    const id =  jwt.verify(String(token),String( process.env.JWT_SECRET_KEY));
+    // const id = req.params.id;
     const order = await Order.find({ user_id: id });
+    
     return res.send(order);
 })
 export default route;

@@ -8,9 +8,9 @@ const route = express.Router();
 const stripe = new Stripe(process.env.STRIPE_PRIVATE_KEY);
 route.post("/card/payment", async (req, res) => {
     const Arr = req.body.Arr;
-    console.log(Arr,"Arr");
     const card_id = Arr.length === 1 ? req.body.Arr[0].card_id : "all";
     try {
+        console.log("1");
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             mode: 'payment',
@@ -30,6 +30,8 @@ route.post("/card/payment", async (req, res) => {
             success_url: `${process.env.FRONT_END_BASE_URL}/payment/success/card/${card_id}`,
             cancel_url: `${process.env.FRONT_END_BASE_URL}`,
         });
+        console.log("1");
+
         res.send(session);
     }
     catch (e) {

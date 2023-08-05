@@ -12,7 +12,6 @@ const route = express.Router();
 route.post("/signup", async (req, res) => {
     const { name, email, phone, gender, password } = req.body;
     let exists = await User.findOne({ email: email });
-
     if (exists) {
         res.send("exists");
     }
@@ -27,7 +26,8 @@ route.post("/signup", async (req, res) => {
         });
         const url = `${process.env.BACKEND_URL}/v1/user/${user._id}/verify/${token.token}`;
         await sendMail(user.email, "Verify Email", url);
-        res.send(user);
+        console.log("mail")
+        res.send("sendMail");
     }
 });
 route.put("/edit/profile/:id", async (req, res) => {
