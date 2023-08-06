@@ -31,7 +31,11 @@ route.put("/:id", async (req, res) => {
     }
 })
 route.get("/admin/orders/:id", async (req, res) => {
-    const id = req.params.id;
+    const token = req.params.id;
+    if (!token) { 
+        return res.send("user Not found");
+    }
+    const id =  jwt.verify(String(token),String( process.env.JWT_SECRET_KEY));
     const product = await Product.find({ user_id: id });
     const orders = await Order.find({});
     let Arr = [];

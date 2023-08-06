@@ -10,7 +10,7 @@ import "dotenv/config";
 const route = express.Router();
 
 route.post("/signup", async (req, res) => {
-    const { name, email, phone, gender, password } = req.body;
+    const { name, email, phone, gender, password,img} = req.body;
     let exists = await User.findOne({ email: email });
     if (exists) {
         res.send("exists");
@@ -18,7 +18,7 @@ route.post("/signup", async (req, res) => {
     else {
         const hashPassword = await bcrypt.hash(password,10);
         const user = await User.create({
-            name, email, phone, gender, password:hashPassword
+            name, email, phone, gender, password:hashPassword,img
         });
         const token = await Token.create({
             id: user._id,
@@ -31,7 +31,11 @@ route.post("/signup", async (req, res) => {
     }
 });
 route.put("/edit/profile/:id", async (req, res) => {
-    const id = req.params.id;
+    const token = req.params.id;
+    if (!token) { 
+        return res.send("user Not found");
+    }
+    const id =  jwt.verify(String(token),String( process.env.JWT_SECRET_KEY));
     const { name,phone, gender } = req.body;
     let exists = await User.findOne({ _id: id });
     if (exists) {
@@ -56,7 +60,7 @@ route.get("/:id/verify/:token", async (req, res) => {
         else {
             await User.updateOne({ _id: user._id }, {verified: true });
             await token.deleteOne();
-            res.send(" verified successfully");
+            res.redirect(`${process.env.FRONT_END_BASE_URL}`);
         }
     }
     catch (e) {
@@ -96,19 +100,27 @@ route.post("/login", async (req, res) => {
     }
 });
 route.post("/seller", async (req, res) => {
-    const { shop, address, pincode, bankaccount, user_id } = req.body;
+    var { shop, address, pincode, bankaccount, user_id } = req.body;  
+    if (!user_id) { 
+        return res.send("user Not found");
+    }
+    user_id =  jwt.verify(String(user_id),String( process.env.JWT_SECRET_KEY));
     let exists = await Seller.findOne({ user_id: user_id });
     if (exists) {
-        res.send("exists");
+        res.send("Seller is Exists");
     }
     else {
         const user = await Seller.create({ shop, address, pincode, bankaccount, user_id });
         console.log(user);
-        res.send(user);
+        res.send("seller Profile is Created");
     }
 });
 route.get("/:id", async (req, res) => {
-    const id = req.params.id;
+    const token = req.params.id;
+     if (!token) { 
+        return res.send("user Not found");
+    }
+    const id =  jwt.verify(String(token),String( process.env.JWT_SECRET_KEY));
     const userProfile = await User.find({ _id: id });
     const sellerProfile = await Seller.find({ user_id: id });
     res.send({userProfile:userProfile,sellerProfile:sellerProfile});

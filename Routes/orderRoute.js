@@ -23,5 +23,14 @@ route.get("/order/all/:id", async (req, res) => {
     const order = await Order.find({ user_id: id });
     
     return res.send(order);
+});
+// change Status
+route.put("/order/status/:id",async(req,res)=>{
+      const id=req.params.id;
+      const status1=String(req.body.status1);
+      console.log(status1);
+      const update= await Order.findOneAndUpdate(({_id:id},{status:status1},{new:true}));
+      console.log(update ,"updated Order Printing");
+      res.send(update)
 })
 export default route;
